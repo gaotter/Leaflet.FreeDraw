@@ -1,4 +1,4 @@
-import 'core-js/es6/symbol';
+/* import 'core-js/es6/symbol';
 import 'core-js/es6/object';
 import 'core-js/es6/function';
 import 'core-js/es6/parse-int';
@@ -11,7 +11,8 @@ import 'core-js/es6/array';
 import 'core-js/es6/regexp';
 import 'core-js/es6/map';
 import 'core-js/es6/weak-map';
-import 'core-js/es6/set';
+import 'core-js/es6/set'; */
+import 'core-js';
 import 'regenerator-runtime/runtime';
 
 import { FeatureGroup, Point } from 'leaflet';
@@ -243,8 +244,14 @@ export default class FreeDraw extends FeatureGroup {
 
             // Create the line iterator and move it to its first `yield` point, passing in the start point
             // from the mouse down event.
-            const lineIterator = this.createPath(svg, map.latLngToContainerPoint(event.latlng), options.strokeWidth);
-
+            let lineIterator
+            if(event.originalEvent != null){
+            lineIterator = this.createPath(svg, map.latLngToContainerPoint(event.latlng), options.strokeWidth);
+            }
+            else{
+                const points = map.layerPointToLatLng([event.touches[0].clientX, event.touches[0].clientY]);
+                lineIterator = this.createPath(svg, map.latLngToContainerPoint(points), options.strokeWidth);
+            }
             /**
              * @method mouseMove
              * @param {Object} event
@@ -252,19 +259,31 @@ export default class FreeDraw extends FeatureGroup {
              */
             const mouseMove = event => {
 
-                // Resolve the pixel point to the latitudinal and longitudinal equivalent.
-                const point = map.mouseEventToContainerPoint(event.originalEvent);
-
-                // Push each lat/lng value into the points set.
-                latLngs.add(map.containerPointToLatLng(point));
-
-                // Invoke the generator by passing in the starting point for the path.
-                lineIterator(new Point(point.x, point.y));
+                if(event.originalEvent != null){
+                    const point = map.mouseEventToContainerPoint(event.originalEvent);
+                    latLngs.add(map.containerPointToLatLng(point));
+                    lineIterator(new Point(point.x, point.y));
+            }
+            else{
+                
+                const points = map.layerPointToLatLng([event.touches[0].clientX, event.touches[0].clientY]);
+            
+                latLngs.add(points);
+                
+                lineIterator(points);
+                window.removeEventListener('touchmove', e => {                
+                    mouseMove(e)}, true)
+                
+            }
 
             };
 
             // Create the path when the user moves their cursor.
             map.on('mousemove touchmove', mouseMove);
+
+            window.addEventListener("touchmove", e => {
+                e.stopPropagation(); 
+                mouseMove(e)})
 
             /**
              * @method mouseUp
@@ -293,6 +312,10 @@ export default class FreeDraw extends FeatureGroup {
                     // Finally invoke the callback for the polygon regions.
                     updateFor(map, 'create');
 
+                    window.removeEventListener('touchstart', e => {                
+                        mouseDown(e)}, true)
+                window.removeEventListener('touchend',                
+                mouseUp)
                     // Exit the `CREATE` mode if the options permit it.
                     options.leaveModeAfterCreate && this.mode(this.mode() ^ CREATE);
 
@@ -302,6 +325,8 @@ export default class FreeDraw extends FeatureGroup {
 
             // Clear up the events when the user releases the mouse.
             map.on('mouseup touchend', mouseUp);
+            window.addEventListener("touchend", 
+            mouseUp)
             'body' in document && document.body.addEventListener('mouseleave', mouseUp);
 
             // Setup the function to invoke when `cancel` has been invoked.
@@ -310,6 +335,10 @@ export default class FreeDraw extends FeatureGroup {
         };
 
         map.on('mousedown touchstart', mouseDown);
+        window.addEventListener("touchstart", e => { 
+            // e.stopPropagation(); 
+        mouseDown(e)
+    })
 
     }
 
