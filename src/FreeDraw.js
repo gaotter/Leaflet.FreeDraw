@@ -271,7 +271,7 @@ export default class FreeDraw extends FeatureGroup {
                 latLngs.add(points);
                 
                 lineIterator(points);
-                window.removeEventListener('touchmove', e => {                
+                document.removeEventListener('touchmove', e => {                
                     mouseMove(e)}, true)
                 
             }
@@ -281,7 +281,7 @@ export default class FreeDraw extends FeatureGroup {
             // Create the path when the user moves their cursor.
             map.on('mousemove touchmove', mouseMove);
 
-            window.addEventListener("touchmove", e => {
+            document.addEventListener("touchmove", e => {
                 e.stopPropagation(); 
                 mouseMove(e)})
 
@@ -312,9 +312,9 @@ export default class FreeDraw extends FeatureGroup {
                     // Finally invoke the callback for the polygon regions.
                     updateFor(map, 'create');
 
-                    window.removeEventListener('touchstart', e => {                
+                    document.removeEventListener('touchstart', e => {                
                         mouseDown(e)}, true)
-                window.removeEventListener('touchend',                
+                document.removeEventListener('touchend',                
                 mouseUp)
                     // Exit the `CREATE` mode if the options permit it.
                     options.leaveModeAfterCreate && this.mode(this.mode() ^ CREATE);
@@ -325,7 +325,7 @@ export default class FreeDraw extends FeatureGroup {
 
             // Clear up the events when the user releases the mouse.
             map.on('mouseup touchend', mouseUp);
-            window.addEventListener("touchend", 
+            document.addEventListener("touchend", 
             mouseUp)
             'body' in document && document.body.addEventListener('mouseleave', mouseUp);
 
@@ -335,7 +335,7 @@ export default class FreeDraw extends FeatureGroup {
         };
 
         map.on('mousedown touchstart', mouseDown);
-        window.addEventListener("touchstart", e => { 
+        document.addEventListener("touchstart", e => { 
             // e.stopPropagation(); 
         mouseDown(e)
     })
